@@ -1,2 +1,8 @@
 out
 *.xml
+1.txt
+2.txt
+hosts1.txt
+hosts2.txt
+new_hosts.txt
+paused.conf

@@ -62,15 +62,13 @@ if [ `redis-cli --raw EXISTS last_services` -gt 0 ]; then
 else
     echo "INFO: last_services not found in redis"
 fi
-redis-cli SET last_services "$(echo $services)" && echo "INFO: last_hosts saved in redis"
+redis-cli SET last_services "$(echo $services)" && echo "INFO: last_services saved in redis"
 
 echo "Diffing the two last scans ..."
 new_hosts_file=new_hosts.txt
 rm -f $new_hosts_file 2>/dev/null
-redis-cli GET last_scan | jq '.[] | .value.name' | sort > hosts1.txt
-# redis-cli get last_services | jq 'keys | .[0]' | sort > services1.txt
-redis-cli GET second_last_scan | jq '.[] | .value.name' | sort > hosts2.txt
-# redis-cli get second_last_services | jq 'keys | .[0]' | sort > services2.txt
+redis-cli GET last_hosts | jq '.[] | .value.name' | sort > hosts1.txt
+redis-cli GET second_last_hosts | jq '.[] | .value.name' | sort > hosts2.txt
 
 comm -23 hosts1.txt hosts2.txt > $new_hosts_file
 sed -i 's/\"//g' $new_hosts_file
@@ -79,8 +77,8 @@ if [ -s "$new_hosts_file" ]; then
     echo "INFO: New hosts in $new_hosts_file"
     if [ "$sendnotif" == "1" ]; then
         echo "INFO: Sending notification ..."
-        tmp=$(cat $new_hosts_file) && echo "New hosts discovered" > $new_hosts_file && echo $tmp >> $new_hosts_file
-        notify -pc ./notify-config.yaml -i $new_hosts_file
+        sed -i '1s/^/New hosts discovered:\n/' $new_hosts_file
+        notify -pc ./notify-config.yaml -i $new_hosts_file --bulk
     fi
 else
     echo "INFO: No new hosts detected"
