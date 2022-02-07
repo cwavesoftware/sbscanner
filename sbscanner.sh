@@ -23,7 +23,7 @@ cat $1
 mkdir out 2>/dev/null
 outfile=out/masscan_report_`date +%s%3N`.xml
 
-sudo masscan --rate $2 -iL $1 -p$3 -oX $outfile
+sudo masscan --rate $2 -iL $1 -p T:$3 -oX $outfile
 if [ ! -s "$outfile" ]; then
     echo "ERROR: masscan report file $outfile doesn't exist or is empty. Exiting ..."
     exit 1
@@ -84,15 +84,6 @@ else
     echo "INFO: No new hosts detected"
 fi
 
-echo "INFO: Checking ports ..."
-ports=$(redis-cli get last_services | jq '[.[] | {ip:.value.host.ip, port:.value.port}]' | jq 'group_by(.ip)[] | {(.[0].ip): [{port: .[].port, allowed: false}]}')
-if [ `redis-cli --raw EXISTS last_ports` -gt 0 ]; then
-    redis-cli DEL second_last_ports
-    redis-cli COPY last_ports second_last_ports
-    echo "INFO: Redis last_ports copied to second_last_ports"
-else
-    echo "INFO: last_ports not found in redis"
-fi
-redis-cli SET last_ports "$(echo $ports)" && echo "INFO: last_ports saved in redis"
+bash check_ports.sh
 
 exit $?
