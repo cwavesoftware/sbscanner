@@ -67,11 +67,11 @@ redis-cli SET last_services "$(echo $services)" && echo "INFO: last_services sav
 echo "Diffing the two last scans ..."
 new_hosts_file=new_hosts.txt
 rm -f $new_hosts_file 2>/dev/null
-redis-cli GET last_hosts | jq '.[] | .value.name' | sort > hosts1.txt
-redis-cli GET second_last_hosts | jq '.[] | .value.name' | sort > hosts2.txt
+redis-cli GET last_hosts | jq -r '.[] | .value.name' | sort > hosts1.txt
+redis-cli GET second_last_hosts | jq -r '.[] | .value.name' | sort > hosts2.txt
 
 comm -23 hosts1.txt hosts2.txt > $new_hosts_file
-sed -i 's/\"//g' $new_hosts_file
+# sed -i 's/\"//g' $new_hosts_file
 
 if [ -s "$new_hosts_file" ]; then
     echo "INFO: New hosts in $new_hosts_file"
