@@ -21,23 +21,39 @@ echo "INFO: The Following IP addresses/ranges will be scanned:"
 cat $1
 
 mkdir out 2>/dev/null
-outfile=out/masscan_report_`date +%s%3N`.xml
+outfile=out/masscan_report_`date +%s%3N`.json
 
-sudo masscan --rate $2 -iL $1 -p T:$3 -oX $outfile
+echo "INFO: Running masscan ..."
+# sudo masscan --rate $2 -iL $1 -p T:$3 -oX $outfile
+sudo masscan --rate $2 -iL $1 -p T:$3 -oJ $outfile
+if [ $? -gt 0 ]; then
+    echo "ERROR: masscan raised an error"
+    exit 1
+fi
+
 if [ ! -s "$outfile" ]; then
     echo "ERROR: masscan report file $outfile doesn't exist or is empty. Exiting ..."
     exit 1
 fi
+echo "INFO: Results saved to $outfile"
 
+bash nmap_wrapper.sh $outfile
+
+echo "INFO: Importing nmap results into faraday ..."
 faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD
 if [ $? -gt 0 ]; then
     echo "ERROR: Couldn't authenticate to faraday server"
     exit 1
 fi
+
 # Delete last scan from faraday and replace it with most recent scan
 faraday-cli workspace delete $faraday_workspace
 faraday-cli workspace create $faraday_workspace
-faraday-cli workspace select $faraday_workspace && faraday-cli tool report $outfile
+faraday-cli workspace select $faraday_workspace
+while IFS= read -r report
+do
+    faraday-cli tool report $report
+done < <(ls -al out/nmap_report* | cut -d " " -f10)
 
 hosts=`faraday-cli host list -w $faraday_workspace -j`
 services=`faraday-cli service list -w $faraday_workspace -j`
@@ -64,17 +80,14 @@ else
 fi
 redis-cli SET last_services "$(echo $services)" && echo "INFO: last_services saved in redis"
 
-echo "Diffing the two last scans ..."
+echo "Diffing hosts from the last two scans ..."
 new_hosts_file=new_hosts.txt
-rm -f $new_hosts_file 2>/dev/null
+rm -f $new_hosts_file
 redis-cli GET last_hosts | jq -r '.[] | .value.name' | sort > hosts1.txt
 redis-cli GET second_last_hosts | jq -r '.[] | .value.name' | sort > hosts2.txt
-
 comm -23 hosts1.txt hosts2.txt > $new_hosts_file
-# sed -i 's/\"//g' $new_hosts_file
-
 if [ -s "$new_hosts_file" ]; then
-    echo "INFO: New hosts in $new_hosts_file"
+    echo "INFO: New dicovered hosts saved in $new_hosts_file"
     if [ "$sendnotif" == "1" ]; then
         echo "INFO: Sending notification ..."
         sed -i '1s/^/New hosts discovered:\n/' $new_hosts_file
@@ -84,6 +97,6 @@ else
     echo "INFO: No new hosts detected"
 fi
 
-bash check_ports.sh
+bash check_ports.sh $sendnotif
 
 exit $?
