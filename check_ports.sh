@@ -21,7 +21,12 @@ if [ -s "$outfile" ]; then
     echo "INFO: Not allowed ports saved into $outfile:" && cat $outfile
     if [ "$1" == "1" ]; then
         echo "INFO: Sending notification ..."
-        sed -i '1s/^/Not allowed ports:\n/' $outfile
+        if [ $(uname) == "Linux" ]; then
+            sed -i '1s/^/Not allowed ports:\n/' $new_hosts_file
+        fi
+        if [ $(uname) == "Darwin" ]; then
+            sed -i '' '1s/^/Not allowed ports:\n/' $new_hosts_file
+        fi
         notify -pc ./notify-config.yaml -i $outfile --bulk
     fi
 fi
@@ -41,7 +46,12 @@ if [ -s "$fixed_ports" ]; then
 
     if [ "$1" == "1" ]; then
         echo "INFO: Sending notification ..."
-        sed -i '1s/^/Fixed (closed) ports:\n/' $fixed_ports
+        if [ $(uname) == "Linux" ]; then
+            sed -i '1s/^/Fixed (closed) ports:\n/' $new_hosts_file
+        fi
+        if [ $(uname) == "Darwin" ]; then
+            sed -i '' '1s/^/Fixed (closed) ports:\n/' $new_hosts_file
+        fi
         notify -pc ./notify-config.yaml -i $fixed_ports --bulk
     fi
 else

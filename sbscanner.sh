@@ -39,7 +39,7 @@ echo "INFO: Results saved to $outfile"
 
 bash nmap_wrapper.sh $outfile
 
-echo "INFO: Importing nmap results into faraday ..."
+echo && echo "INFO: Importing nmap results into faraday ..."
 faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD
 if [ $? -gt 0 ]; then
     echo "ERROR: Couldn't authenticate to faraday server"
@@ -53,7 +53,7 @@ faraday-cli workspace select $faraday_workspace
 while IFS= read -r report
 do
     faraday-cli tool report $report
-done < <(ls -al out/nmap_report* | cut -d " " -f10)
+done < <(ls -al out/nmap_report* | rev | cut -d " " -f1 | rev)
 
 hosts=`faraday-cli host list -w $faraday_workspace -j`
 services=`faraday-cli service list -w $faraday_workspace -j`
@@ -80,22 +80,7 @@ else
 fi
 redis-cli SET last_services "$(echo $services)" && echo "INFO: last_services saved in redis"
 
-echo "Diffing hosts from the last two scans ..."
-new_hosts_file=new_hosts.txt
-rm -f $new_hosts_file
-redis-cli GET last_hosts | jq -r '.[] | .value.name' | sort > hosts1.txt
-redis-cli GET second_last_hosts | jq -r '.[] | .value.name' | sort > hosts2.txt
-comm -23 hosts1.txt hosts2.txt > $new_hosts_file
-if [ -s "$new_hosts_file" ]; then
-    echo "INFO: New dicovered hosts saved in $new_hosts_file"
-    if [ "$sendnotif" == "1" ]; then
-        echo "INFO: Sending notification ..."
-        sed -i '1s/^/New hosts discovered:\n/' $new_hosts_file
-        notify -pc ./notify-config.yaml -i $new_hosts_file --bulk
-    fi
-else
-    echo "INFO: No new hosts detected"
-fi
+bash diff.sh $sendnotif
 
 bash check_ports.sh $sendnotif
 
