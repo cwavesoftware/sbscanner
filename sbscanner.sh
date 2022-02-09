@@ -16,7 +16,7 @@ if [ "$#" -lt 3 ]; then
 fi
 
 echo "INFO: The Following IP addresses/ranges will be scanned:"
-cat $1
+cat target/$1
 
 mkdir out 2>/dev/null
 outfile=out/masscan_report_`date +%s%3N`.json
@@ -38,7 +38,7 @@ echo "INFO: Results saved to $outfile"
 bash nmap_wrapper.sh $outfile
 
 echo && echo "INFO: Importing nmap results into faraday ..."
-faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p $FARADAY_PASSWORD
+faraday-cli auth -f $FARADAY_URL -u $FARADAY_USER -p "$FARADAY_PASSWORD"
 if [ $? -gt 0 ]; then
     echo "ERROR: Couldn't authenticate to faraday server"
     exit 1
