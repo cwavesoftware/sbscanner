@@ -16,7 +16,7 @@ if [ "$#" -lt 3 ]; then
 fi
 
 echo "INFO: The Following IP addresses/ranges will be scanned:"
-cat target/$1
+cat targets/$1
 
 mkdir out 2>/dev/null
 outfile=out/masscan_report_`date +%s%3N`.json
