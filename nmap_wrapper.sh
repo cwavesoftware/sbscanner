@@ -2,7 +2,7 @@
 
 targetfile=nmap_targets.txt
 rm -f $targetfile
-# redis-cli GET last_services | jq -r '[.[] | {ip:.value.host.ip, port:.value.port}] | group_by(.ip)[] | {ip:.[0].ip, ports: [.[].port]} | .ip + " -p T:" + (.ports | join(","))' | sort > $targetfile
+# redis-cli GET -h $REDIS_SERVER last_services | jq -r '[.[] | {ip:.value.host.ip, port:.value.port}] | group_by(.ip)[] | {ip:.[0].ip, ports: [.[].port]} | .ip + " -p T:" + (.ports | join(","))' | sort > $targetfile
 cat $1 | jq -r '[.[] | { ip:.ip, port:.ports[0].port}] | group_by(.ip)[] | {ip:.[0].ip, ports: [.[].port]} | .ip + " -p T:" + (.ports | join(","))' | sort > $targetfile
 
 rm -rf out/nmap_report*
@@ -11,6 +11,6 @@ echo "INFO: Target file:" && cat $targetfile
 
 while IFS= read -r target
 do
-    sudo nmap -sV -Pn -oX out/nmap_report_$(echo $target | cut -d " " -f1).xml $target
+    nmap -sV -Pn -oX out/nmap_report_$(echo $target | cut -d " " -f1).xml $target
 done < "$targetfile"
 echo "INFO: Results saved to out/nmap_report_*"

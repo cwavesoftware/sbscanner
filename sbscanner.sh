@@ -2,8 +2,6 @@
 
 faraday_workspace=last_scan
 
-source .env
-
 echo "INFO: Checking for necessary tools ..."
 if which masscan && which faraday-cli && which redis-cli && which jq && which notify; then
     echo "INFO: Tools installed, great"
@@ -25,7 +23,7 @@ outfile=out/masscan_report_`date +%s%3N`.json
 
 echo "INFO: Running masscan ..."
 # sudo masscan --rate $2 -iL $1 -p T:$3 -oX $outfile
-sudo masscan --rate $2 -iL $1 -p T:$3 -oJ $outfile
+masscan --rate $2 -iL targets/$1 -p T:$3 -oJ $outfile
 if [ $? -gt 0 ]; then
     echo "ERROR: masscan raised an error"
     exit 1
@@ -61,24 +59,24 @@ services=`faraday-cli service list -w $faraday_workspace -j`
 # echo "Last scan:"
 # echo $scan | jq '.'
 
-if [ `redis-cli --raw EXISTS last_hosts` -gt 0 ]; then
+if [ `redis-cli -h $REDIS_SERVER --raw EXISTS last_hosts` -gt 0 ]; then
     sendnotif=1
-    redis-cli DEL second_last_hosts
-    redis-cli COPY last_hosts second_last_hosts
+    redis-cli -h $REDIS_SERVER DEL second_last_hosts
+    redis-cli -h $REDIS_SERVER COPY last_hosts second_last_hosts
     echo "INFO: Redis last_hosts copied to second_last_hosts"
 else
     echo "INFO: last_hosts not found in redis"
 fi
-redis-cli SET last_hosts "$(echo $hosts)" && echo "INFO: last_hosts saved in redis"
+redis-cli -h $REDIS_SERVER SET last_hosts "$(echo $hosts)" && echo "INFO: last_hosts saved in redis"
 
-if [ `redis-cli --raw EXISTS last_services` -gt 0 ]; then
-    redis-cli DEL second_last_services
-    redis-cli COPY last_services second_last_services
+if [ `redis-cli -h $REDIS_SERVER --raw EXISTS last_services` -gt 0 ]; then
+    redis-cli -h $REDIS_SERVER DEL second_last_services
+    redis-cli -h $REDIS_SERVER COPY last_services second_last_services
     echo "INFO: Redis last_services copied to second_last_services"
 else
     echo "INFO: last_services not found in redis"
 fi
-redis-cli SET last_services "$(echo $services)" && echo "INFO: last_services saved in redis"
+redis-cli -h $REDIS_SERVER SET last_services "$(echo $services)" && echo "INFO: last_services saved in redis"
 
 bash diff.sh $sendnotif
 

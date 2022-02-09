@@ -12,3 +12,4 @@ nmap_targets.txt
 ports1.txt
 ports2.txt
 ports_not_allowed.txt
+.env

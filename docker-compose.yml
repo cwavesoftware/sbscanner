@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  scanner:
+    build: .
+    image: cosmin91ro/sbscanner:1.0
+    container_name: sbscanner_scanner
+    environment:
+      - FARADAY_URL=${FARADAY_URL:?FARADAY_URL not defined}
+      - FARADAY_USER=${FARADAY_USER:?FARADAY_URL not defined}
+      - FARADAY_PASSWORD=${FARADAY_PASSWORD:?FARADAY_URL not defined}
+      - REDIS_SERVER=${REDIS_SERVER:?FARADAY_URL not defined}
+
+    volumes:
+      - ./targets:/root/sbscanner/targets
+      - ./out:/root/sbscanner/out
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:6.2
+    hostname: redis
+    container_name: sbscanner_redis
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
+
+networks: 
+  default: 
+    name: faradaynet
+    external: true 
