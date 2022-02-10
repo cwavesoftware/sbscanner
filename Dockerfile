@@ -18,7 +18,7 @@ ENV GO111MODULE=on
 RUN go get -v github.com/projectdiscovery/notify/cmd/notify@latest
 
 RUN mkdir sbscanner
-COPY sbscanner.sh nmap_wrapper.sh diff.sh check_ports.sh clean_up.sh notify-config.yaml /root/sbscanner/
+COPY scripts/* notify-config.yaml /root/sbscanner/
 
 RUN apt install -y libpcap-dev
 
