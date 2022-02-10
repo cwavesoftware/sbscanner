@@ -1,0 +1,19 @@
+slack:
+  - id: "slack"
+    slack_channel: "recon"
+    slack_username: "test"
+    slack_format: "{{data}}"
+    slack_webhook_url: "https://hooks.slack.com/services/XXXXXX"
+
+discord:
+  - id: "crawl"
+    discord_channel: "crawl"
+    discord_username: "test"
+    discord_format: "{{data}}"
+    discord_webhook_url: "https://discord.com/api/webhooks/XXXXXXXX"
+
+telegram:
+  - id: "tel"
+    telegram_api_key: "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    telegram_chat_id: "XXXXXXXXXX"
+    telegram_format: "{{data}}"
