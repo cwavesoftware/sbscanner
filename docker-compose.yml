@@ -7,9 +7,9 @@ services:
     container_name: sbscanner_scanner
     environment:
       - FARADAY_URL=${FARADAY_URL:?FARADAY_URL not defined}
-      - FARADAY_USER=${FARADAY_USER:?FARADAY_URL not defined}
-      - FARADAY_PASSWORD=${FARADAY_PASSWORD:?FARADAY_URL not defined}
-      - REDIS_SERVER=${REDIS_SERVER:?FARADAY_URL not defined}
+      - FARADAY_USER=${FARADAY_USER:?FARADAY_USER not defined}
+      - FARADAY_PASSWORD=${FARADAY_PASSWORD:?FARADAY_PASSWORD not defined}
+      - REDIS_SERVER=${REDIS_SERVER:?REDIS_SERVER not defined}
 
     volumes:
       - ./targets:/root/sbscanner/targets
