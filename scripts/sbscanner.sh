@@ -44,6 +44,7 @@ if [ $? -gt 0 ]; then
     exit 1
 fi
 
+faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > ports2.txt
 # Delete last scan from faraday and replace it with most recent scan
 faraday-cli workspace delete $faraday_workspace
 faraday-cli workspace create $faraday_workspace
@@ -69,17 +70,7 @@ else
 fi
 redis-cli -h $REDIS_SERVER SET last_hosts "$(echo $hosts)" && echo "INFO: last_hosts saved in redis"
 
-if [ `redis-cli -h $REDIS_SERVER --raw EXISTS last_services` -gt 0 ]; then
-    redis-cli -h $REDIS_SERVER DEL second_last_services
-    redis-cli -h $REDIS_SERVER COPY last_services second_last_services
-    echo "INFO: Redis last_services copied to second_last_services"
-else
-    echo "INFO: last_services not found in redis"
-fi
-redis-cli -h $REDIS_SERVER SET last_services "$(echo $services)" && echo "INFO: last_services saved in redis"
-
 bash diff.sh $sendnotif
-
 bash check_ports.sh $sendnotif
 
 exit $?

@@ -1,11 +1,13 @@
 #!/bin/bash
 
+faraday_workspace=last_scan
+
 echo && echo "INFO: Checking ports ..."
 tmp=host_port.txt
 rm -f $tmp
 outfile=ports_not_allowed.txt
 rm -f $outfile
-redis-cli -h $REDIS_SERVER GET last_services | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > $tmp
+faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > $tmp
 
 while IFS= read -r line
 do
@@ -34,7 +36,6 @@ fi
 echo "INFO: Looking for ports that were fixed ..."
 fixed_ports=fixed_ports.txt
 mv $tmp ports1.txt
-redis-cli -h $REDIS_SERVER GET second_last_services | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > ports2.txt
 comm -23 ports2.txt ports1.txt > $fixed_ports
 if [ -s "$fixed_ports" ]; then
     echo "INFO: Some ports were fixed (closed):" && cat $fixed_ports 
