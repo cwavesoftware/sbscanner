@@ -29,7 +29,7 @@ if [ -s "$outfile" ]; then
         if [ $(uname) == "Darwin" ]; then
             sed -i '' '1s/^/Not allowed ports:\n/' $outfile
         fi
-        notify -pc ./notify-config.yaml -i $outfile --bulk
+        notify -nc -pc ./notify-config.yaml -i $outfile --bulk
     fi
 fi
 
@@ -53,7 +53,7 @@ if [ -s "$fixed_ports" ]; then
         if [ $(uname) == "Darwin" ]; then
             sed -i '' '1s/^/Fixed (closed) ports:\n/' $fixed_ports
         fi
-        notify -pc ./notify-config.yaml -i $fixed_ports --bulk
+        notify -nc -pc ./notify-config.yaml -i $fixed_ports --bulk --cl 1000
     fi
 else
     echo "INFO: No ports were fixed"

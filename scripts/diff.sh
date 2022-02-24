@@ -17,7 +17,7 @@ if [ -s "$new_hosts_file" ]; then
         if [ $(uname) == "Darwin" ]; then
             sed -i '' '1s/^/New hosts discovered:\n/' $new_hosts_file
         fi
-        notify -pc ./notify-config.yaml -i $new_hosts_file --bulk
+        notify -nc -pc ./notify-config.yaml -i $new_hosts_file --bulk
     fi
 else
     echo "INFO: No new hosts detected"
