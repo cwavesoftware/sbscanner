@@ -29,7 +29,7 @@ if [ -s "$outfile" ]; then
         if [ $(uname) == "Darwin" ]; then
             sed -i '' '1s/^/Not allowed ports:\n/' $outfile
         fi
-        notify -nc -pc ./notify-config.yaml -i $outfile --bulk
+        notify -nc -pc ./notify-config.yaml -i $outfile --bulk --cl 1000
     fi
 fi
 
