@@ -20,7 +20,6 @@ services:
   redis:
     image: redis:6.2
     hostname: redis
-    container_name: sbscanner_redis
     volumes:
       - redis-data:/data
 
