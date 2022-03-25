@@ -22,12 +22,15 @@ done < "$tmp"
 if [ -s "$outfile" ]; then
     echo "INFO: Not allowed ports saved into $outfile:" && cat $outfile
     if [ "$1" == "1" ]; then
+        # We send notifications only for new ports discovered
+        new_ports=new_ports.txt
+        comm -23 $outfile ports2.txt > $new_ports
         echo "INFO: Sending notification ..."
         if [ $(uname) == "Linux" ]; then
-            sed -i '1s/^/Not allowed ports:\n/' $outfile
+            sed -i '1s/^/New ports discovered:\n/' $new_ports
         fi
         if [ $(uname) == "Darwin" ]; then
-            sed -i '' '1s/^/Not allowed ports:\n/' $outfile
+            sed -i '' '1s/^/New ports discovered:\n/' $new_ports
         fi
         notify -nc -pc ./notify-config.yaml -i $outfile --bulk --cl 1000
     fi
