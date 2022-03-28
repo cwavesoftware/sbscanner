@@ -3,11 +3,11 @@
 faraday_workspace=last_scan
 
 echo && echo "INFO: Checking ports ..."
-tmp=host_port.txt
-rm -f $tmp
-outfile=ports_not_allowed.txt
-rm -f $outfile
-faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > $tmp
+last_host_port_file=out/host_port.txt
+rm -f $last_host_port_file
+ports_not_allowed_file=out/ports_not_allowed.txt
+rm -f $ports_not_allowed_file
+faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > $last_host_port_file
 
 while IFS= read -r line
 do
@@ -15,48 +15,54 @@ do
     if [ $(redis-cli -h $REDIS_SERVER --raw EXISTS "$line:allowed") -eq 1 ] && [ $(redis-cli -h $REDIS_SERVER --raw GET "$line:allowed") == "true" ]; then
         echo "$line is allowed"
     else
-        echo $line >> $outfile
+        echo $line >> $ports_not_allowed_file
     fi
-done < "$tmp"
+done < "$last_host_port_file"
 
-if [ -s "$outfile" ]; then
-    echo "INFO: Not allowed ports saved into $outfile:" && cat $outfile
+if [ -s "$ports_not_allowed_file" ]; then
+    echo "INFO: Not allowed ports saved into $ports_not_allowed_file:" && cat $ports_not_allowed_file
+    new_ports_file=out/new_ports.txt
+    comm -23 $ports_not_allowed_file second_last_host_port.txt > $new_ports_file
     if [ "$1" == "1" ]; then
-        # We send notifications only for new ports discovered
-        new_ports=new_ports.txt
-        comm -23 $outfile ports2.txt > $new_ports
-        echo "INFO: Sending notification ..."
-        if [ $(uname) == "Linux" ]; then
-            sed -i '1s/^/New ports discovered:\n/' $new_ports
+        if [ -s "$new_ports_file" ]; then
+            # We send notifications only for new ports discovered
+            echo "INFO: Sending notification ..."
+            if [ $(uname) == "Linux" ]; then
+                sed -i '1s/^/New ports discovered:\n/' $new_ports_file
+            fi
+            if [ $(uname) == "Darwin" ]; then
+                sed -i '' '1s/^/New ports discovered:\n/' $new_ports_file
+            fi
+            notify -nc -pc ./notify-config.yaml -i $new_ports_file --bulk --cl 1000
+        else
+            echo "No new ports detected" 
+            echo "No new ports detected" | notify -nc -pc ./notify-config.yaml
         fi
-        if [ $(uname) == "Darwin" ]; then
-            sed -i '' '1s/^/New ports discovered:\n/' $new_ports
-        fi
-        notify -nc -pc ./notify-config.yaml -i $outfile --bulk --cl 1000
+    else
+        echo "Notifications are OFF"
     fi
 fi
 
 echo "INFO: Looking for ports that were fixed ..."
-fixed_ports=fixed_ports.txt
-mv $tmp ports1.txt
-comm -23 ports2.txt ports1.txt > $fixed_ports
-if [ -s "$fixed_ports" ]; then
-    echo "INFO: Some ports were fixed (closed):" && cat $fixed_ports 
+fixed_ports_file=out/fixed_ports.txt
+comm -23 second_last_host_port.txt $last_host_port_file > $fixed_ports_file
+if [ -s "$fixed_ports_file" ]; then
+    echo "INFO: Some ports were fixed (closed):" && cat $fixed_ports_file 
 
     while IFS= read -r line
     do
         redis-cli -h $REDIS_SERVER SET "$line:fixed" true
-    done < "$fixed_ports"
+    done < "$fixed_ports_file"
 
     if [ "$1" == "1" ]; then
         echo "INFO: Sending notification ..."
         if [ $(uname) == "Linux" ]; then
-            sed -i '1s/^/Fixed (closed) ports:\n/' $fixed_ports
+            sed -i '1s/^/Fixed (closed) ports:\n/' $fixed_ports_file
         fi
         if [ $(uname) == "Darwin" ]; then
-            sed -i '' '1s/^/Fixed (closed) ports:\n/' $fixed_ports
+            sed -i '' '1s/^/Fixed (closed) ports:\n/' $fixed_ports_file
         fi
-        notify -nc -pc ./notify-config.yaml -i $fixed_ports --bulk --cl 1000
+        notify -nc -pc ./notify-config.yaml -i $fixed_ports_file --bulk --cl 1000
     fi
 else
     echo "INFO: No ports were fixed"

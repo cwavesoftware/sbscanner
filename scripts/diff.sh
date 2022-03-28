@@ -21,4 +21,5 @@ if [ -s "$new_hosts_file" ]; then
     fi
 else
     echo "INFO: No new hosts detected"
+    echo "No new hosts detected" | notify -nc -pc ./notify-config.yaml
 fi

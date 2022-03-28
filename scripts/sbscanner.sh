@@ -22,7 +22,6 @@ mkdir out 2>/dev/null
 outfile=out/masscan_report_`date +%s%3N`.json
 
 echo "INFO: Running masscan ..."
-# sudo masscan --rate $2 -iL $1 -p T:$3 -oX $outfile
 masscan --rate $2 -iL targets/$1 -p T:$3 -oJ $outfile
 if [ $? -gt 0 ]; then
     echo "ERROR: masscan raised an error"
@@ -44,7 +43,7 @@ if [ $? -gt 0 ]; then
     exit 1
 fi
 
-faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > ports2.txt
+faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > second_last_host_port.txt
 # Delete last scan from faraday and replace it with most recent scan
 faraday-cli workspace delete $faraday_workspace
 faraday-cli workspace create $faraday_workspace
