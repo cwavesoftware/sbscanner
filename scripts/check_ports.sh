@@ -23,6 +23,12 @@ if [ -s "$ports_not_allowed_file" ]; then
     echo "INFO: Not allowed ports saved into $ports_not_allowed_file:" && cat $ports_not_allowed_file
     new_ports_file=out/new_ports.txt
     comm -23 $ports_not_allowed_file second_last_host_port.txt > $new_ports_file
+
+    echo "INFO: Filtering ports we don't want to be notified about ..."
+    cp $new_ports_file $new_ports_file.copy
+    rg=$(echo $2 | sed -E 's/,/$|:/pg' | sed -En 's/^/:/pg' | sed -En 's/$/\$/pg' | head -n 1)
+    grep -v -E "$rg" $new_ports_file.copy > $new_ports_file
+
     if [ "$1" == "1" ]; then
         if [ -s "$new_ports_file" ]; then
             # We send notifications only for new ports discovered

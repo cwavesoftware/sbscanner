@@ -11,7 +11,7 @@ else
 fi
 
 if [ "$#" -lt 3 ]; then
-    echo "Usage: bash $0 <ips_input_file> <masscan_rate> <ports>"
+    echo "Usage: bash $0 <ips_input_file> <masscan_rate> <ports> [ports_to_skip_notifications]"
     exit 1
 fi
 
@@ -56,9 +56,6 @@ done < <(ls -al out/nmap_report* | rev | cut -d " " -f1 | rev)
 hosts=`faraday-cli host list -w $faraday_workspace -j`
 services=`faraday-cli service list -w $faraday_workspace -j`
 
-# echo "Last scan:"
-# echo $scan | jq '.'
-
 if [ `redis-cli -h $REDIS_SERVER --raw EXISTS last_hosts` -gt 0 ]; then
     sendnotif=1
     redis-cli -h $REDIS_SERVER DEL second_last_hosts
@@ -70,6 +67,6 @@ fi
 redis-cli -h $REDIS_SERVER SET last_hosts "$(echo $hosts)" && echo "INFO: last_hosts saved in redis"
 
 bash diff.sh $sendnotif
-bash check_ports.sh $sendnotif
+bash check_ports.sh $sendnotif $4
 
 exit $?
