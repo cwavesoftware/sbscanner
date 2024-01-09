@@ -1,6 +1,6 @@
 #!/bin/bash
 
-faraday_workspace=last_scan
+faraday_workspace=$3
 
 echo && echo "INFO: Checking ports ..."
 last_host_port_file=out/host_port.txt

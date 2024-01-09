@@ -68,6 +68,6 @@ fi
 redis-cli -h $REDIS_SERVER SET last_hosts "$(echo $hosts)" && echo "INFO: last_hosts saved in redis"
 
 bash diff.sh $sendnotif
-bash check_ports.sh $sendnotif $4
+bash check_ports.sh $sendnotif $5 $faraday_workspace
 
 exit $?
