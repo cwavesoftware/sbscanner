@@ -1,19 +1,20 @@
 #!/bin/bash
 
-faraday_workspace=last_scan
-
 echo "INFO: Checking for necessary tools ..."
-if which masscan && which faraday-cli && which redis-cli && which jq && which notify; then
+if which masscan && which faraday-cli && which redis-cli && which jq; then
     echo "INFO: Tools installed, great"
 else 
     echo "ERROR: Some tools were not found, make sure it's installed and available in PATH"
     exit 1
 fi
 
-if [ "$#" -lt 3 ]; then
-    echo "Usage: bash $0 <ips_input_file> <masscan_rate> <ports> [ports_to_skip_notifications]"
+if [ "$#" -lt 4 ]; then
+    echo "Usage: bash $0 <ips_input_file> <masscan_rate> <ports> <faraday_workspace> [ports_to_skip_notifications]"
     exit 1
 fi
+
+faraday_workspace=$4
+echo "Using faraday workspace $faraday_workspace"
 
 echo "INFO: The Following IP addresses/ranges will be scanned:"
 cat targets/$1
