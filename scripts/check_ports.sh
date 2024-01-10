@@ -1,6 +1,6 @@
 #!/bin/bash
 
-faraday_workspace=$3
+faraday_workspace=$2
 
 echo && echo "INFO: Checking ports ..."
 last_host_port_file=out/host_port.txt
@@ -26,7 +26,7 @@ if [ -s "$ports_not_allowed_file" ]; then
 
     echo "INFO: Filtering ports we don't want to be notified about ..."
     cp $new_ports_file $new_ports_file.copy
-    rg=$(echo $2 | sed -E 's/,/$|:/pg' | sed -En 's/^/:/pg' | sed -En 's/$/\$/pg' | head -n 1)
+    rg=$(echo $3 | sed -E 's/,/$|:/pg' | sed -En 's/^/:/pg' | sed -En 's/$/\$/pg' | head -n 1)
     grep -v -E "$rg" $new_ports_file.copy > $new_ports_file
 
     if [ "$1" == "1" ]; then

@@ -8,8 +8,8 @@ else
     exit 1
 fi
 
-if [ "$#" -lt 4 ]; then
-    echo "Usage: bash $0 <ips_input_file> <masscan_rate> <ports> <faraday_workspace> [ports_to_skip_notifications]"
+if [ "$#" -lt 5 ]; then
+    echo "Usage: bash $0 <ips_input_file> <masscan_rate> <ports> <faraday_workspace> <make_diff> [ports_to_skip_notifications]"
     exit 1
 fi
 
@@ -67,7 +67,7 @@ else
 fi
 redis-cli -h $REDIS_SERVER SET last_hosts "$(echo $hosts)" && echo "INFO: last_hosts saved in redis"
 
-bash diff.sh $sendnotif
-bash check_ports.sh $sendnotif $5 $faraday_workspace
+[ "$5" == "true" ] && bash diff.sh $sendnotif
+[ "$5" == "true" ] && bash check_ports.sh $sendnotif $faraday_workspace $6
 
 exit $?
