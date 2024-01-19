@@ -1,13 +1,15 @@
 ## Usage
-**IMPORTANT**: You must have Faraday set up in order to use this tool.
-> 0. Install Faraday - check https://github.com/cosmin91ro/faraday.
 > 1. Clone this repo and `$ cd sbscanner`.
-> 2. Create .env file and define the following environment variables. Set FARADAY_URL accordingly in case you changed the Faraday hostname during step 0. Leave REDIS_SERVER as it is.
+> 2. Create .env file and paste the content below. Leave FARADAY_URL and REDIS_SERVER as is, fill in the remaining variables.
 ```
-FARADAY_URL=http://faraday.server:5985
-FARADAY_USER=
-FARADAY_PASSWORD=
+FARADAY_URL="http://faraday.server:5985"
 REDIS_SERVER=redis
+FARADAY_SUPERUSER_NAME=
+FARADAY_SUPERUSER_EMAIL=
+FARADAY_SUPERUSER_PASSWORD=
+PGSQL_USER=
+PGSQL_PASSWD=
+PGSQL_DBNAME=
 ```
 > 3. Define notify settings in *notify-config.yml* if you want to get notifications. Check https://github.com/projectdiscovery/notify if you need help
 > 4. Create directory structure:
@@ -19,15 +21,13 @@ $ echo 192.168.1.0/24 >> targets/ips.txt
 ...
 ```
 > 6. Build services:
-`$ docker-compose build`
+`$ docker compose build`
 > 7. Finally, run the scan. **It's important to launch the scripts from the *bin* directory to avoid any errors:**
-`$ cd bin && ./scan.sh <target_file> <masscan_rate> <ports>`
+`$ cd bin && ./scan.sh <ips_input_file> <masscan_rate> <ports> <faraday_workspace> <make_diff> [ports_to_skip_notifications]`
 
-**<*target_file*> is the filename located in targets dir only, without the *./targets/* prefix e.g.:**
+**<*ips_input_file*> is the filename located in targets dir only, without the *./targets/* prefix e.g.:**
 
-`$ ./scan.sh ips.txt 10000 0-65535`
+`$ ./scan.sh ips.txt 10000 0-65535 myscan no`
 
-First run will do a baseline scan and save the results in the database, without sending any notifications. Subsequents scans will send notifications accordingly.
-
-You'll have the results in *out* folder and in notifications channels if configured. An UI is currently Work In Progress. 
+You'll have the results in the *out* folder and in [Faraday](http://localhost:5985)
 

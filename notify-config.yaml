@@ -14,6 +14,6 @@ discord:
 
 telegram:
   - id: "tel"
-    telegram_api_key: "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    telegram_chat_id: "XXXXXXXXXX"
+    telegram_api_key: "2135768532:AAHGGWsX-6OcJz2kLtwbdOyHD6XNAzobnlw"
+    telegram_chat_id: "1516405978"
     telegram_format: "{{data}}"

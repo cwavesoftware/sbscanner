@@ -3,12 +3,13 @@ version: "3.8"
 services:
   scanner:
     build: .
-    image: cosmin91ro/sbscanner:1.0
-    container_name: sbscanner_scanner
+    image: cwavesoftware/sbscanner:1.0
+    platform: "linux/amd64"
+    restart: "no"
     environment:
       - FARADAY_URL=${FARADAY_URL:?FARADAY_URL not defined}
-      - FARADAY_USER=${FARADAY_USER:?FARADAY_USER not defined}
-      - FARADAY_PASSWORD=${FARADAY_PASSWORD:?FARADAY_PASSWORD not defined}
+      - FARADAY_USER=${FARADAY_SUPERUSER_NAME:?FARADAY_SUPERUSER_NAME not defined}
+      - FARADAY_PASSWORD=${FARADAY_SUPERUSER_PASSWORD:?FARADAY_SUPERUSER_PASSWORD not defined}
       - REDIS_SERVER=${REDIS_SERVER:?REDIS_SERVER not defined}
 
     volumes:
@@ -16,17 +17,54 @@ services:
       - ./out:/root/sbscanner/out
     depends_on:
       - redis
+      - faraday
 
   redis:
     image: redis:6.2
     hostname: redis
+    restart: "unless-stopped"
     volumes:
       - redis-data:/data
 
+  faraday-db:
+    image: postgres:12.3-alpine
+    volumes:
+      - "postgres-data:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_DB=${PGSQL_DBNAME:?PGSQL_DBNAME not defined}
+      - POSTGRES_USER=${PGSQL_USER:?PGSQL_USER not defined}
+      - POSTGRES_PASSWORD=${PGSQL_PASSWD:?PGSQL_PASSWD not defined}
+      - POSTGRES_PORT=5432
+    restart: "unless-stopped"
+
+  faraday:
+    build: 
+      context: ./faraday/
+      dockerfile: ./Docker/faraday-server/Dockerfile
+    image: cwavesoftware/faraday-server:3.19
+    hostname: faraday.server
+    ports:
+      - "5985:5985"
+    volumes:
+      - "faraday-data:/root/.faraday"
+    environment: 
+      - LISTEN_ADDR=0.0.0.0 
+      - PGSQL_HOST=faraday-db
+      - PGSQL_USER=${PGSQL_USER:?PGSQL_USER not defined}
+      - PGSQL_PASSWD=${PGSQL_PASSWD:?PGSQL_PASSWD not defined}
+      - PGSQL_DBNAME=${PGSQL_DBNAME:?PGSQL_DBNAME not defined}
+      - FARADAY_SUPERUSER_NAME=${FARADAY_SUPERUSER_NAME:?FARADAY_SUPERUSER_NAME not defined}
+      - FARADAY_SUPERUSER_EMAIL=${FARADAY_SUPERUSER_EMAIL:?FARADAY_SUPERUSER_EMAIL not defined}
+      - FARADAY_SUPERUSER_PASSWORD=${FARADAY_SUPERUSER_PASSWORD:?FARADAY_SUPERUSER_PASSWORD not defined}
+    depends_on:
+      - faraday-db
+    restart: "unless-stopped"
+
 volumes:
   redis-data:
+  postgres-data:
+  faraday-data:
 
 networks: 
   default: 
-    name: faradaynet
-    external: true 
+    name: sbscannernet

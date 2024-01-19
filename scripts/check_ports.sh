@@ -1,5 +1,6 @@
 #!/bin/bash
 
+send_notif=$1
 faraday_workspace=$2
 
 echo && echo "INFO: Checking ports ..."
@@ -7,6 +8,7 @@ last_host_port_file=out/host_port.txt
 rm -f $last_host_port_file
 ports_not_allowed_file=out/ports_not_allowed.txt
 rm -f $ports_not_allowed_file
+
 faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort > $last_host_port_file
 
 while IFS= read -r line
@@ -29,7 +31,7 @@ if [ -s "$ports_not_allowed_file" ]; then
     rg=$(echo $3 | sed -E 's/,/$|:/pg' | sed -En 's/^/:/pg' | sed -En 's/$/\$/pg' | head -n 1)
     grep -v -E "$rg" $new_ports_file.copy > $new_ports_file
 
-    if [ "$1" == "1" ]; then
+    if [ "$send_notif" == "1" ]; then
         if [ -s "$new_ports_file" ]; then
             # We send notifications only for new ports discovered
             echo "INFO: Sending notification ..."
@@ -60,7 +62,7 @@ if [ -s "$fixed_ports_file" ]; then
         redis-cli -h $REDIS_SERVER SET "$line:fixed" true
     done < "$fixed_ports_file"
 
-    if [ "$1" == "1" ]; then
+    if [ "$send_notif" == "1" ]; then
         echo "INFO: Sending notification ..."
         if [ $(uname) == "Linux" ]; then
             sed -i '1s/^/Fixed (closed) ports:\n/' $fixed_ports_file
