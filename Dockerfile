@@ -14,9 +14,13 @@ WORKDIR /root/masscan
 RUN make && make install
 # installing faraday-cli
 WORKDIR /root
-RUN pip install faraday-cli
-# installing notify
+RUN git clone https://github.com/infobyte/faraday-cli.git
+WORKDIR /root/faraday-cli
+RUN git checkout c9f97a812c6c27063428f91bf13d1f097b187a82
+RUN pip install .
+WORKDIR /root
 
+# installing notify
 ENV GOPATH /root/go
 ENV GOROOT /usr/local/go
 ENV PATH=$PATH:$GOPATH/bin
