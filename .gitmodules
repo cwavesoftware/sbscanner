@@ -1,0 +1,3 @@
+[submodule "faraday"]
+	path = faraday
+	url = https://github.com/cwavesoftware/faraday.git
