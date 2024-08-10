@@ -53,8 +53,11 @@ if [ "$make_diff" == "true" ]; then
 else # is probably on demand
 	cat hosts_header.txt >tmp
 	faraday-cli host list -w $faraday_workspace | grep "$(cat targets/$1 | tr '\n' '|' | sed 's/|$//g')" -E >>tmp
+	echo "" >>tmp
 	cat services_header.txt >>tmp
 	faraday-cli service list -w $faraday_workspace | grep "$(cat targets/$1 | tr '\n' '|' | sed 's/|$//g')" -E >>tmp
+	cat tmp
+	notify -nc -pc ./notify-config.yaml -i tmp --bulk
 fi
 
 faraday-cli workspace create $faraday_workspace
@@ -80,9 +83,8 @@ else
 	echo "make_diff = $make_diff, we don't compare with previous scan"
 fi
 
-redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$(echo -n $hosts)" && echo "INFO: $(echo -n $faraday_workspace)_last_hosts saved in redis"
-
 if [ "$make_diff" == "true" ]; then
+	redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$(echo -n $hosts)" && echo "INFO: $(echo -n $faraday_workspace)_last_hosts saved in redis"
 	bash diff.sh $sendnotif $faraday_workspace
 	check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
 fi
