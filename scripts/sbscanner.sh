@@ -51,13 +51,17 @@ if [ "$make_diff" == "true" ]; then
 	# Delete last scan from faraday and replace it with most recent scan
 	faraday-cli workspace delete $faraday_workspace
 else # is probably on demand
-	cat hosts_header.txt >tmp
-	faraday-cli host list -w $faraday_workspace | grep "$(cat targets/$1 | tr '\n' '|' | sed 's/|$//g')" -E >>tmp
-	echo "" >>tmp
-	cat services_header.txt >>tmp
-	faraday-cli service list -w $faraday_workspace | grep "$(cat targets/$1 | tr '\n' '|' | sed 's/|$//g')" -E >>tmp
-	cat tmp
-	notify -nc -pc ./notify-config.yaml -i tmp --bulk
+	faraday-cli host list -w $faraday_workspace -j >hosts.json
+	rm msg.txt
+	touch msg.txt
+	while read -r ip; do
+		hjson=$(cat hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
+		his=$(echo $hjson | jq .id)
+		hname = $(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
+		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/hosts/ws/$faraday_workspace/hid/$hid" >>msg.txt
+	done
+	ls -al msg.txt
+	[[ -s msg.txt ]] && notify -nc -pc ./notify-config.yaml -i msg.txt --bulk
 fi
 
 faraday-cli workspace create $faraday_workspace
