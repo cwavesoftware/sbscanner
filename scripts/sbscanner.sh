@@ -56,12 +56,12 @@ else # is probably on demand
 	touch ./out/msg.txt
 	while read -r ip; do
 		hjson=$(cat ./out/hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
-		his=$(echo $hjson | jq .id)
+		hid=$(echo $hjson | jq .id)
 		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
-		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/hosts/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
+		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/host/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
 	done <targets/$1
 	ls -al ./out/msg.txt
-	[[ -s msg.txt ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
+	[[ -s "./out/msg.txt" ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
 fi
 
 faraday-cli workspace create $faraday_workspace
