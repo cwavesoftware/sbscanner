@@ -50,18 +50,6 @@ if [ "$make_diff" == "true" ]; then
 	faraday-cli service list -w $faraday_workspace -j | jq -r '.[] | [.value.host.ip, .value.port] | join(":")' | sort >second_last_host_port.txt
 	# Delete last scan from faraday and replace it with most recent scan
 	faraday-cli workspace delete $faraday_workspace
-else # is probably on demand
-	faraday-cli host list -w $faraday_workspace -j >./out/hosts.json
-	rm ./out/msg.txt
-	touch ./out/msg.txt
-	while read -r ip; do
-		hjson=$(cat ./out/hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
-		hid=$(echo $hjson | jq .id)
-		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
-		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/host/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
-	done <targets/$1
-	ls -al ./out/msg.txt
-	[[ -s "./out/msg.txt" ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
 fi
 
 faraday-cli workspace create $faraday_workspace
@@ -91,5 +79,17 @@ if [ "$make_diff" == "true" ]; then
 	redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$(echo -n $hosts)" && echo "INFO: $(echo -n $faraday_workspace)_last_hosts saved in redis"
 	bash diff.sh $sendnotif $faraday_workspace
 	check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
+else # is probably on demand
+	faraday-cli host list -w $faraday_workspace -j >./out/hosts.json
+	rm ./out/msg.txt
+	touch ./out/msg.txt
+	while read -r ip; do
+		hjson=$(cat ./out/hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
+		hid=$(echo $hjson | jq .id)
+		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
+		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/host/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
+	done <targets/$1
+	ls -al ./out/msg.txt
+	[[ -s "./out/msg.txt" ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
 fi
 exit 0
