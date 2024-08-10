@@ -29,7 +29,7 @@ RUN go install -v github.com/projectdiscovery/notify/cmd/notify@latest
 
 RUN apt install -y libpcap-dev nmap
 RUN mkdir sbscanner
-COPY scripts/* notify-config.yaml /root/sbscanner/
+COPY scripts/* notify-config.yaml static/* /root/sbscanner/
 
 WORKDIR /root/sbscanner
 ENTRYPOINT [ "bash", "sbscanner.sh" ]

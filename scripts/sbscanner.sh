@@ -51,9 +51,9 @@ if [ "$make_diff" == "true" ]; then
 	# Delete last scan from faraday and replace it with most recent scan
 	faraday-cli workspace delete $faraday_workspace
 else # is probably on demand
-	cat ../static/hosts_header.txt >tmp
+	cat hosts_header.txt >tmp
 	faraday-cli host list -w $faraday_workspace | grep "$(cat targets/$1 | tr '\n' '|' | sed 's/|$//g')" -E >>tmp
-	cat ../static/services_header.txt >>tmp
+	cat services_header.txt >>tmp
 	faraday-cli service list -w $faraday_workspace | grep "$(cat targets/$1 | tr '\n' '|' | sed 's/|$//g')" -E >>tmp
 fi
 
@@ -87,4 +87,3 @@ if [ "$make_diff" == "true" ]; then
 	check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
 fi
 exit 0
-
