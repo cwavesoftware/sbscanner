@@ -87,6 +87,7 @@ else # is probably on demand
 		hjson=$(cat ./out/hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
 		hid=$(echo $hjson | jq .id)
 		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
+		[[ $hname -eq "null" ]] && hname=$(echo $hjson | jq '.name' | sed 's/"//g"')
 		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/host/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
 	done <targets/$1
 	ls -al ./out/msg.txt
