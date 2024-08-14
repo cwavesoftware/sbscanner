@@ -84,6 +84,7 @@ else # is probably on demand
 	rm ./out/msg.txt
 	touch ./out/msg.txt
 	while read -r ip; do
+		[[ -z $ip ]] && continue
 		hjson=$(cat ./out/hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
 		hid=$(echo $hjson | jq .id)
 		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
