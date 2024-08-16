@@ -86,9 +86,13 @@ else # is probably on demand
 	while read -r ip; do
 		[[ -z $ip ]] && continue
 		hjson=$(cat ./out/hosts.json | jq --arg ip "$ip" '.[] | if .value.name==$ip then .value else empty end')
+		if [[ -z $hjson ]]; then
+			echo "no scan results for $ip" >>./out/msg.txt
+			continue
+		fi
 		hid=$(echo $hjson | jq .id)
 		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
-		[[ $hname -eq "null" ]] && hname=$(echo $hjson | jq '.name' | sed 's/"//g"')
+		[[ "$hname" == "null" ]] && hname=$(echo $hjson | jq '.name' | sed 's/"//g"')
 		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/host/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
 	done <targets/$1
 	ls -al ./out/msg.txt
