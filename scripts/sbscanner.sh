@@ -76,9 +76,10 @@ else
 fi
 
 if [ "$make_diff" == "true" ]; then
-	redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$(echo -n $hosts)" && echo "INFO: $(echo -n $faraday_workspace)_last_hosts saved in redis"
-	bash diff.sh $sendnotif $faraday_workspace
-	check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
+	redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$(echo -n $hosts)" &&
+		echo "INFO: $(echo -n $faraday_workspace)_last_hosts saved in redis" &&
+		bash diff.sh $sendnotif $faraday_workspace &&
+		bash check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
 else # is probably on demand
 	faraday-cli host list -w $faraday_workspace -j >./out/hosts.json
 	rm ./out/msg.txt
@@ -98,4 +99,3 @@ else # is probably on demand
 	ls -al ./out/msg.txt
 	[[ -s "./out/msg.txt" ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
 fi
-exit 0
