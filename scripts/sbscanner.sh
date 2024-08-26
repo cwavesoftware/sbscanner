@@ -60,7 +60,6 @@ while IFS= read -r report; do
 done < <(ls -al out/nmap_report* | rev | cut -d " " -f1 | rev)
 
 hosts=$(faraday-cli host list -w $faraday_workspace -j)
-services=$(faraday-cli service list -w $faraday_workspace -j)
 
 if [ "$make_diff" == "true" ]; then
 	if [ $(redis-cli -h $REDIS_SERVER --raw EXISTS "$faraday_workspace"_last_hosts) -gt 0 ]; then
@@ -81,7 +80,7 @@ if [ "$make_diff" == "true" ]; then
 		bash diff.sh $sendnotif $faraday_workspace &&
 		bash check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
 else # is probably on demand
-	faraday-cli host list -w $faraday_workspace -j >./out/hosts.json
+	echo $hosts >./out/hosts.json
 	rm ./out/msg.txt
 	touch ./out/msg.txt
 	while read -r ip; do
