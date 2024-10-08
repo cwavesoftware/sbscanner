@@ -74,8 +74,12 @@ else
   echo "make_diff = $make_diff, we don't compare with previous scan"
 fi
 
+sanitized_hosts=$(echo "$hosts" | jq -c '.')
+echo "INFO-mpetrea sanitized_hosts var -->  $sanitized_hosts "
 if [ "$make_diff" == "true" ]; then
   redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$(echo -n $hosts)" &&
+  #redis-cli -h $REDIS_SERVER SET $(echo -n $faraday_workspace)_last_hosts "$sanitized_hosts" &&
+
     echo "INFO: $(echo -n $faraday_workspace)_last_hosts saved in redis" &&
     bash diff.sh $sendnotif $faraday_workspace &&
     bash check_ports.sh $sendnotif $faraday_workspace $ports_to_skip_notifications
@@ -91,10 +95,16 @@ else # is probably on demand
       continue
     fi
     hid=$(echo $hjson | jq .id)
+    echo " ----> mpetrea hid = $hid "
     hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
+    echo " ----> mpetrea hname = $hname "
     [[ "$hname" == "null" ]] && hname=$(echo $hjson | jq '.name' | sed 's/"//g')
-    echo "port scan for $hname completed: $(echo hjson | jq '.service_summaries')" >>./out/msg.txt
+    portsss=$(echo hjson | jq '.service_summaries')
+    #echo "port scan for $hname completed: $(echo hjson | jq '.service_summaries')" >>./out/msg.txt
+    echo "---->mpetrea --> port scan for $hname completed: $portsss " >>./out/msg.txt
   done <targets/$1
-  ls -al ./out/msg.txt
+  ls -al ./out/msg.txt 
+  echo "cat --> ./out/msg.txt" 
+  cat ./out/msg.txt
   [[ -s "./out/msg.txt" ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
 fi
