@@ -93,7 +93,7 @@ else # is probably on demand
 		hid=$(echo $hjson | jq .id)
 		hname=$(echo $hjson | jq '.hostnames[0]' | sed 's/"//g')
 		[[ "$hname" == "null" ]] && hname=$(echo $hjson | jq '.name' | sed 's/"//g')
-		echo "port scan for $hname completed: $FARADAY_PUBLIC_URL/#/host/ws/$faraday_workspace/hid/$hid" >>./out/msg.txt
+  echo "port scan for $hname completed: $(echo hjson | jq '.service_summaries)" >>./out/msg.txt
 	done <targets/$1
 	ls -al ./out/msg.txt
 	[[ -s "./out/msg.txt" ]] && notify -nc -pc ./notify-config.yaml -i ./out/msg.txt --bulk
